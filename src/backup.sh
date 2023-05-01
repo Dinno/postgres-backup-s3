@@ -1,12 +1,12 @@
 #! /bin/sh
 
-set -eu
+set -eux
 set -o pipefail
 
 source ./env.sh
 
 echo "Creating backup of $POSTGRES_DATABASE database..."
-pg_dump --format=custom \
+pg_dump --format=$BACKUP_FORMAT \
         -h $POSTGRES_HOST \
         -p $POSTGRES_PORT \
         -U $POSTGRES_USER \

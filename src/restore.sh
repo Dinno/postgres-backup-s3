@@ -1,7 +1,8 @@
 #! /bin/sh
 
-set -u # `-e` omitted intentionally, but i can't remember why exactly :'(
+set -ue
 set -o pipefail
+set -x
 
 source ./env.sh
 
@@ -17,7 +18,7 @@ if [ $# -eq 1 ]; then
   timestamp="$1"
   key_suffix="${POSTGRES_DATABASE}_${timestamp}${file_type}"
 else
-  echo "Finding latest backup..."
+  echo "Finding latest backup for ${POSTGRES_DATABASE}..."
   key_suffix=$(
     aws $aws_args s3 ls "${s3_uri_base}/${POSTGRES_DATABASE}" \
       | sort \
@@ -35,10 +36,24 @@ if [ -n "$PASSPHRASE" ]; then
   rm db.dump.gpg
 fi
 
-conn_opts="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -d $POSTGRES_DATABASE"
+if [ -z "$TARGET_DATABASE" ]; then
+  TARGET_DATABASE=$POSTGRES_DATABASE
+fi
 
+if [ ! "$BACKUP_FORMAT" = plain]; then
+  TARGET_DATABASE=$POSTGRES_DATABASE
+fi
+
+conn_opts="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER"
+
+echo "Creating DB \"$TARGET_DATABASE\""
+createdb $conn_opts -T template0 $TARGET_DATABASE
 echo "Restoring from backup..."
-pg_restore $conn_opts --clean --if-exists db.dump
+if [ "$BACKUP_FORMAT" = plain]; then
+  psql $conn_opts -d $TARGET_DATABASE < db.dump
+else
+  pg_restore $conn_opts -d $TARGET_DATABASE --clean --if-exists db.dump
+fi
 rm db.dump
 
 echo "Restore complete."
