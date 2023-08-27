@@ -36,10 +36,6 @@ if [ -n "$PASSPHRASE" ]; then
   rm db.dump.gpg
 fi
 
-if [ -z "$TARGET_DATABASE" ]; then
-  TARGET_DATABASE=$POSTGRES_DATABASE
-fi
-
 if [ ! "$BACKUP_FORMAT" = plain]; then
   TARGET_DATABASE=$POSTGRES_DATABASE
 fi
