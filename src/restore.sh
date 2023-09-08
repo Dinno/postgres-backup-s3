@@ -45,7 +45,7 @@ conn_opts="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER"
 echo "Creating DB \"$TARGET_DATABASE\""
 createdb $conn_opts -T template0 $TARGET_DATABASE
 echo "Restoring from backup..."
-if [ "$BACKUP_FORMAT" = plain]; then
+if [ "$BACKUP_FORMAT" = "plain" ]; then
   psql $conn_opts -d $TARGET_DATABASE < db.dump
 else
   pg_restore $conn_opts -d $TARGET_DATABASE --clean --if-exists db.dump
